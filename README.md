@@ -3,7 +3,9 @@
 This plugin allows to manage projects templates using easily from nvim command-line.
 
 With some extra features:
-- File names can contain tokens as well  
+- File names can contain tokens
+- __TODO__ Directory tree can contain tokens
+- __TODO__ Migrated to lua
 
 ## Demo
 ![](demo.gif)
