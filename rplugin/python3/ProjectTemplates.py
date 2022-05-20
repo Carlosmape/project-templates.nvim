@@ -13,6 +13,7 @@ class ProjectTemplate(object):
         self.projects = {}
         self.tokenized_files = []
         self.tokenized_file_names = []
+        self.tokenized_folder_names = []
         self.tokens = []
         self.token_values = []
 
@@ -40,19 +41,24 @@ class ProjectTemplate(object):
         self.vim.chdir(projectName)
 
         self.getTokensFromProject(projectName)
+        self.askForTokenValues()
         self.replaceTokens()
 
         self.vim.command("redraw | echo")
         self.vim.out_write(f"\nTemplate {to_load} Loaded Successfully.\n")
 
     def getTokensFromProject(self, projectName):
+        """Searches in the project tree for #{PLACEHOLDER} tokens
+        Tokens may be in subfolders, file names and file content"""
         r = re.compile(r'#{[^}]+}')
         for currentfolder, subfolders, files in os.walk(projectName):
+
+            # Tokens at file level
             for file in files:
                 file_path = os.path.join(currentfolder, file)
                 if not is_binary(file_path):
 
-                    # Look for tokenized file names (tokens are in the file name)
+                    # Look for tokenized file names (tokens in the file name)
                     file_matches = r.findall(file)
                     for file_match in file_matches:
                         print('{file_match} token in file {file_path}')
@@ -61,7 +67,7 @@ class ProjectTemplate(object):
                         if file_match not in self.tokens:
                             self.tokens.append(file_match)
 
-                    # Look for tokenized files (tokens are inside file contents)
+                    # Look for tokenized files (tokens inside file contents)
                     with open(file_path, 'r') as tosearch:
                         contents = tosearch.read()
                         matches = r.findall(contents)
@@ -74,15 +80,28 @@ class ProjectTemplate(object):
                     if file_path not in self.tokenized_files:
                         self.tokenized_files.append(file_path)
 
+            # Tokens at folder level
+            for subfolder in subfolders:
+                folder_match = r.findall(subfolder)
+                for folder_token in folder_match:
+                    print(f'{folder_token} in file {subfolder}')
+                    if currentfolder not in self.tokenized_folder_names:
+                        self.tokenized_folder_names.append(currentfolder)
+                    if folder_token not in self.tokens:
+                        self.tokens.append(folder_token)
+
         print(self.tokens)
 
-    def replaceTokens(self):
-        """User insert new loaded tokens values and does replacement where it is needed""" 
+    def askForTokenValues(self):
+        """Asks user for token-value pairs to be replaced"""
         # Ask user to replace token with desired value
         for token in self.tokens:
             token_value = self.vim.eval(f'input("Enter the value for the token {token}> ")')
             self.token_values.append((token, token_value))
-        
+
+    
+    def replaceTokens(self):
+        """Does replacement where it is needed (including project's subfolders, file name and file content)""" 
         # Replace tokens in file's content with given value
         for file in self.tokenized_files:
             with open(file, 'r') as toread:
@@ -102,6 +121,14 @@ class ProjectTemplate(object):
                     file_name = r.sub(value, file)
                     os.rename(file, file_name)
 
+        # Finally replace tokens in project subfolders
+        for folder in self.tokenized_folder_names:
+            for token, value in self.token_values:
+                if token in folder:
+                    r = re.compile(token)
+                    folder_name = r.sub(value, folder)
+                    os.rename(folder, folder_name)
+
     @pynvim.command("SaveAsTemplate", sync=True)
     def saveAsTemplate(self):
         pwd = self.vim.eval('getcwd()')
@@ -109,7 +136,6 @@ class ProjectTemplate(object):
 
         # shutil.copytree(pwd, self.projectDir + os.sep() + template_name)
         shutil.copytree(pwd, f'{self.projectDir}/{template_name}')
-
 
         self.vim.command("redraw | echo")
         self.vim.command(f"echo 'Template {template_name} Created.'")
