@@ -10,7 +10,6 @@ class ProjectTemplate(object):
     def __init__(self, vim):
         self.vim = vim
         self.projectDir = f"{os.path.expanduser('~')}/.templates"
-        self.projects = {}
         self.tokenized_files = []
         self.tokenized_file_names = []
         self.tokenized_folder_names = []
@@ -46,6 +45,7 @@ class ProjectTemplate(object):
 
         self.vim.command("redraw | echo")
         self.vim.out_write(f"\nTemplate {to_load} Loaded Successfully.\n")
+        self.clearLoadedTemplateData()
 
     def getTokensFromProject(self, projectName):
         """Searches in the project tree for #{PLACEHOLDER} tokens
@@ -63,7 +63,7 @@ class ProjectTemplate(object):
                     for file_match in file_matches:
                         print('{file_match} token in file {file_path}')
                         if file_path not in self.tokenized_file_names:
-                            self.tokenized_file_names.append(file_path)
+                            self.tokenized_file_names.append(file)
                         if file_match not in self.tokens:
                             self.tokens.append(file_match)
 
@@ -101,7 +101,8 @@ class ProjectTemplate(object):
 
     
     def replaceTokens(self):
-        """Does replacement where it is needed (including project's subfolders, file name and file content)""" 
+        """Does replacement where it is needed
+        including project's subfolders, file name and file content""" 
         # Replace tokens in file's content with given value
         for file in self.tokenized_files:
             with open(file, 'r') as toread:
@@ -113,13 +114,15 @@ class ProjectTemplate(object):
                 towrite.write(content)
 
         # Replace tokens in file's names with given value
-        for file in self.tokenized_file_names:
-            for token, value in self.token_values:
-                # Ensure this token is inside this tokenized file name
-                if token in file: 
-                    r = re.compile(token)
-                    file_name = r.sub(value, file)
-                    os.rename(file, file_name)
+        for file_path in self.tokenized_files:
+            for file in self.tokenized_file_names:
+                if file in file_path:
+                    for token, value in self.token_values:
+                        # Ensure this token is inside this tokenized file name
+                        if token in file:
+                            r = re.compile(token)
+                            file_name = r.sub(value, file_path)
+                            os.rename(file_path, file_name)
 
         # Finally replace tokens in project subfolders
         for folder in self.tokenized_folder_names:
@@ -129,8 +132,17 @@ class ProjectTemplate(object):
                     folder_name = r.sub(value, folder)
                     os.rename(folder, folder_name)
 
+    def clearLoadedTemplateData(self):
+        """Clears internal lists to avoid troubles during multiple template loading in the same nvim session"""
+        self.token_values.clear()
+        self.tokens.clear()
+        self.tokenized_files.clear()
+        self.tokenized_file_names.clear()
+        self.tokenized_folder_names.clear()
+
     @pynvim.command("SaveAsTemplate", sync=True)
     def saveAsTemplate(self):
+        """Saves the nvim CWD as a template (inside ~/.templates folder)"""
         pwd = self.vim.eval('getcwd()')
         template_name = self.vim.eval('input("Enter the name of the new template> ")')
 
@@ -142,6 +154,7 @@ class ProjectTemplate(object):
 
     @pynvim.command("DeleteTemplate", sync=True)
     def deleteTemplate(self):
+        """Deletes existing project template"""
         dir = os.listdir(self.projectDir)
         self.vim.command(f'let choice = Finder({str(dir)}, "Enter the name of the template to delete")')
         to_delete = self.vim.eval('choice[0]')
@@ -152,4 +165,3 @@ class ProjectTemplate(object):
 
         self.vim.command("redraw | echo")
         self.vim.command(f"echo 'Template {os.path.basename(to_delete)} Deleted Successfully.'")
-
