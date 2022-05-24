@@ -4,6 +4,7 @@ import os
 import shutil
 from binaryornot.check import is_binary
 
+PLACEHOLDER = r'#{[^}]+}'
 
 @pynvim.plugin
 class ProjectTemplate(object):
@@ -39,7 +40,7 @@ class ProjectTemplate(object):
         shutil.copytree(os.path.join(self.projectDir, to_load), projectName)
         self.vim.chdir(projectName)
 
-        self.getTokensFromProject(projectName)
+        self.loadProjectTemplateTokens(projectName)
         self.askForTokenValues()
         self.replaceTokens()
 
@@ -47,10 +48,10 @@ class ProjectTemplate(object):
         self.vim.out_write(f"\nTemplate {to_load} Loaded Successfully.\n")
         self.clearLoadedTemplateData()
 
-    def getTokensFromProject(self, projectName):
+    def loadProjectTemplateTokens(self, projectName):
         """Searches in the project tree for #{PLACEHOLDER} tokens
         Tokens may be in subfolders, file names and file content"""
-        r = re.compile(r'#{[^}]+}')
+        r = re.compile(PLACEHOLDER)
         for currentfolder, subfolders, files in os.walk(projectName):
 
             # Tokens at file level
@@ -82,26 +83,25 @@ class ProjectTemplate(object):
 
             # Tokens at folder level
             for subfolder in subfolders:
-                folder_match = r.findall(subfolder)
-                for folder_token in folder_match:
-                    print(f'{folder_token} in file {subfolder}')
+                folder_matches = r.findall(subfolder)
+                subfolder_path = os.path.join(currentfolder, subfolder)
+                for folder_match in folder_matches:
+                    print(f'{folder_match} in file {subfolder}')
                     if currentfolder not in self.tokenized_folder_names:
-                        self.tokenized_folder_names.append(currentfolder)
-                    if folder_token not in self.tokens:
-                        self.tokens.append(folder_token)
+                        self.tokenized_folder_names.append(subfolder_path)
+                    if folder_match not in self.tokens:
+                        self.tokens.append(folder_match)
 
         print(self.tokens)
 
     def askForTokenValues(self):
         """Asks user for token-value pairs to be replaced"""
-        # Ask user to replace token with desired value
         for token in self.tokens:
             token_value = self.vim.eval(f'input("Enter the value for the token {token}> ")')
             self.token_values.append((token, token_value))
 
-    
     def replaceTokens(self):
-        """Does replacement where it is needed
+        """Does token- value replacement where it is needed
         including project's subfolders, file name and file content""" 
         # Replace tokens in file's content with given value
         for file in self.tokenized_files:
