@@ -4,8 +4,9 @@ This plugin allows to manage projects templates using easily from nvim command-l
 
 With some extra features:
 - File names can contain tokens
-- __TODO__ Directory tree can contain tokens
+- Directory tree can contain tokens
 - __TODO__ Migrated to lua
+- __TODO__ Remove python dependency(?)
 
 ## Demo
 ![](demo.gif)
