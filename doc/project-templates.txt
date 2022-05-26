@@ -67,10 +67,10 @@ Loading Templates                                                *:LoadTemplate*
     #include <iostream>~
 
     int main() {~
-        std::cout << "Hello, pianocomposer321!" << std::endl;~
+        std::cout << "Hello, Imobard!" << std::endl;~
     }~
 
-    with an input of "pianocomposer321".
+    with an input of "Imobard".
 
     If you also had a file "main.h" with the following contents:
 
@@ -80,7 +80,9 @@ Loading Templates                                                *:LoadTemplate*
     main.cpp.
 
     You can have as many different placeholders as you want, and you can have
-    as many instances of the same placeholder as you want.
+    as many instances of the same placeholder as you want. Placeholders may be
+	in anywhere inside the template: file content, file name and subdirectory
+	names
 
 
 Creating/Saving Templates                                      *:SaveAsTemplate*
@@ -117,7 +119,7 @@ Removing Templates                                             *:DeleteTemplate*
 ==============================================================================
 
     Pull Requests are welcome, and should be submitted at the project's GitHub
-    repo at https://github.com/pianocomposer321/project-templates.nvim/pulls.
+    repo at https://github.com/Carlosmape/project-templates.nvim/pulls.
 
 
 4. Bugs                                                 *project-templates-bugs*
@@ -127,13 +129,22 @@ Removing Templates                                             *:DeleteTemplate*
     Running |:SaveAsTemplate| on an existing template results in an error.
 
     Submit bug reports to
-    https://github.com/pianocomposer321/project-templates.nvim/issues.
+    https://github.com/Carlosmape/project-templates.nvim/issues.
 
 
 5. Credits                                           *project-templates-credits*
 ==============================================================================
 
-    Inspiration for this plugin came from the following Sublime Text 3 plugin
+	I am Imobard (Carlosmape), the author and principal plugin maintainer.
+
+    This is a forked plugin from pianocomposer321/project-templates.nvim approach.
+	I improve the original code by adding features and support for new placeholders
+	along the templates projects (allowing placeholders in file content, file names,
+	directory tree and so on) 
+	I will try to have a more active version and improved of pianocomposer321's one. 
+	But all the acknowlegments shall be to him and his inspirations:
+	
+	Inspiration for this plugin came from the following Sublime Text 3 plugin
     and VS Code extensions:
 
     https://github.com/bit101/ProjectMaker
