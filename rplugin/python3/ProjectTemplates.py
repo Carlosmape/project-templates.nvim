@@ -63,7 +63,7 @@ class ProjectTemplate(object):
                     file_matches = r.findall(file)
                     for file_match in file_matches:
                         print('{file_match} token in file {file_path}')
-                        if file_path not in self.tokenized_file_names:
+                        if file not in self.tokenized_file_names:
                             self.tokenized_file_names.append(file)
                         if file_match not in self.tokens:
                             self.tokens.append(file_match)
@@ -120,7 +120,9 @@ class ProjectTemplate(object):
                     for token, value in self.token_values:
                         # Ensure this token is inside this tokenized file name
                         if token in file:
-                            r = re.compile(token)
+                            # Just replace last placeholder
+                            # (avoid to replace placeholders in absolute pahts)
+                            r = re.compile(token+r'(?!.*\\)')
                             file_name = r.sub(value, file_path)
                             os.rename(file_path, file_name)
 
